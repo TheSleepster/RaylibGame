@@ -1,1 +1,1 @@
-make -k SILENT=@ DEBUG=1 
+make -k SILENT_OUTPUT=@ DEBUG_BUILD=1 
