@@ -12,8 +12,8 @@ DEBUG_BUILD   ?=
 # --------------------------------------------
 ifeq ($(OS),Windows_NT)
     OS_DEFINE = -DOS_WINDOWS=1
-    PLATFORM_LIBS = -lopengl32 -luser32 -lgdi32 -lwinmm -lshell32 -lole32 -luuid -lversion -ladvapi32 -lsetupapi -lcfgmgr32 -loleaut32 -limm32
-    LDFLAGS = -Wl,/IGNORE:4099 -Wl,/STACK:314572800 
+    PLATFORM_LIBS = -lopengl32 -luser32 -lgdi32 -lwinmm -lshell32 -lole32 -luuid -lversion -ladvapi32 -lsetupapi -lcfgmgr32 -loleaut32 -limm32 -lmsvcrt.lib
+    LDFLAGS = -Wl,/IGNORE:4099 -Wl,/STACK:314572800 -Wl,/NODEFAULTLIB:LIBCMT 
     EXE_EXT = .exe
     DLL_EXT = .dll
     LIB_EXT = .lib
@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
     DEV_NULL = NUL
     PIC_FLAG =
     PDB_SUFFIX := $(shell powershell -Command "[guid]::NewGuid().ToString('N').Substring(0,8)")
-	PDB_LDFLAG = -Wl,/PDB:../build/game_$(BUILD_TYPE)_$(PDB_SUFFIX).pdb
+	PDB_LDFLAG = -Wl /PDB:../build/game_$(BUILD_TYPE)_$(PDB_SUFFIX).pdb 
 
 	DEL_PDB = powershell -NoProfile -Command "Get-ChildItem ..\\build\\game_$(BUILD_TYPE)*.pdb -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue"
 	DEL_RDI = powershell -NoProfile -Command "Get-ChildItem ..\\build\\game_$(BUILD_TYPE)*.rdi -ErrorAction SilentlyContinue | Remove-Item -Force -ErrorAction SilentlyContinue"
@@ -51,7 +51,7 @@ endif
 # --------------------------------------------
 # Build Flags
 # --------------------------------------------
-PROJECT_COMMON_COMPILER_FLAGS = -Wall -Wextra
+PROJECT_COMMON_COMPILER_FLAGS = -Wall -Wextra -MT
 
 BUILD_TYPE ?= debug
 ifeq ($(DEBUG_BUILD),1)
@@ -79,12 +79,13 @@ GAME_OUT = ../build/game_$(BUILD_TYPE)$(EXE_EXT)
 # --------------------------------------------
 all: game_out
 
+# NOTE(Sleepster): The indents on this MUST be tabs. I really don't know GNU hates happiness...
 ../build:
 	-mkdir -p ../build
 
 game_out: $(GAME_SRC) | ../build
 	@echo Building the game...
-	$(SILENT_OUTPUT) $(CXX) $(BUILD_COMPILER_FLAGS) $(OS_DEFINE) -I$(GAME_INCLUDES) $(GAME_SRC) -o $(GAME_OUT) $(GAME_EXTERNAL_LIBRARIES) -MMD -MF ../misc/game_build_info.d
+	$(SILENT_OUTPUT) $(CXX) $(BUILD_COMPILER_FLAGS) $(OS_DEFINE) $(GAME_INCLUDES) $(GAME_SRC) -o $(GAME_OUT) $(LDFLAGS) $(GAME_EXTERNAL_LIBRARIES) -MMD -MF ../misc/game_build_info.d
 
 .PHONY: all
 
